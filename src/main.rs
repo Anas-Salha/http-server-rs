@@ -1,12 +1,23 @@
-#[allow(unused_imports)]
-use std::net::TcpListener;
+use std::{io::Write, net::TcpListener};
+
+mod http;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
     for stream in listener.incoming() {
         match stream {
-            Ok(_stream) => {
+            Ok(mut stream) => {
                 println!("accepted new connection");
+                let msg = http::ResponseMsg::new(http::Version::Http11, http::ResponseCode::OK)
+                    .to_string();
+
+                if let Err(e) = stream.write_all(msg.as_bytes()) {
+                    eprintln!("Failed to write to stream: {}", e);
+                };
+
+                if let Err(e) = stream.flush() {
+                    eprintln!("Failed to flush stream: {}", e);
+                };
             }
             Err(e) => {
                 println!("error: {}", e);
