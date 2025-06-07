@@ -15,13 +15,13 @@ impl fmt::Display for HttpResponseCode {
     }
 }
 
-pub struct HttpResponseMsg {
+pub struct HttpResponse {
     version: HttpVersion,
     response_code: HttpResponseCode,
     _headers: (),
 }
 
-impl HttpResponseMsg {
+impl HttpResponse {
     pub fn new(version: HttpVersion, response_code: HttpResponseCode) -> Self {
         Self {
             version,
@@ -31,7 +31,7 @@ impl HttpResponseMsg {
     }
 }
 
-impl fmt::Display for HttpResponseMsg {
+impl fmt::Display for HttpResponse {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} {}\r\n\r\n", self.version, self.response_code)
     }

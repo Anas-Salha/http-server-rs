@@ -10,8 +10,7 @@ fn main() {
         match stream {
             Ok(mut stream) => {
                 println!("accepted new connection");
-                let msg =
-                    HttpResponseMsg::new(HttpVersion::Http11, HttpResponseCode::OK).to_string();
+                let msg = HttpResponse::new(HttpVersion::Http11, HttpResponseCode::OK).to_string();
 
                 if let Err(e) = stream.write_all(msg.as_bytes()) {
                     eprintln!("Failed to write to stream: {}", e);
