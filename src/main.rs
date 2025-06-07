@@ -1,3 +1,5 @@
+use http::response::*;
+use http::*;
 use std::{io::Write, net::TcpListener};
 
 mod http;
@@ -8,8 +10,8 @@ fn main() {
         match stream {
             Ok(mut stream) => {
                 println!("accepted new connection");
-                let msg = http::ResponseMsg::new(http::Version::Http11, http::ResponseCode::OK)
-                    .to_string();
+                let msg =
+                    HttpResponseMsg::new(HttpVersion::Http11, HttpResponseCode::OK).to_string();
 
                 if let Err(e) = stream.write_all(msg.as_bytes()) {
                     eprintln!("Failed to write to stream: {}", e);
