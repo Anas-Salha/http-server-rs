@@ -42,11 +42,10 @@ impl ResponseMsg {
             _headers: (),
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        let version = self.version.to_string();
-        let response_code = self.response_code.to_string();
-
-        format!("{version} {response_code}\r\n\r\n")
+impl fmt::Display for ResponseMsg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}\r\n\r\n", self.version, self.response_code)
     }
 }
