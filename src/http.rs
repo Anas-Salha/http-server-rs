@@ -1,4 +1,5 @@
-use std::fmt;
+use std::{fmt, str::FromStr};
+pub mod request;
 pub mod response;
 
 pub enum HttpVersion {
@@ -12,5 +13,17 @@ impl fmt::Display for HttpVersion {
         };
 
         write!(f, "{}", version)
+    }
+}
+
+impl FromStr for HttpVersion {
+    type Err = fmt::Error;
+
+    // Required method
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "HTTP/1.1" => Ok(HttpVersion::Http11),
+            _ => Err(fmt::Error),
+        }
     }
 }

@@ -2,13 +2,15 @@ use crate::http::*;
 use std::fmt;
 
 pub enum HttpResponseCode {
-    OK,
+    Ok,
+    NotFound,
 }
 
 impl fmt::Display for HttpResponseCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
-            HttpResponseCode::OK => "200 OK",
+            HttpResponseCode::Ok => "200 OK",
+            HttpResponseCode::NotFound => "404 Not Found",
         };
 
         write!(f, "{}", message)
@@ -18,7 +20,6 @@ impl fmt::Display for HttpResponseCode {
 pub struct HttpResponse {
     version: HttpVersion,
     response_code: HttpResponseCode,
-    _headers: (),
 }
 
 impl HttpResponse {
@@ -26,7 +27,6 @@ impl HttpResponse {
         Self {
             version,
             response_code,
-            _headers: (),
         }
     }
 }
