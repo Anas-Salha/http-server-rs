@@ -1,6 +1,4 @@
 use http::request::*;
-use http::response::*;
-use http::*;
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
@@ -15,15 +13,13 @@ fn main() {
             Ok(mut stream) => {
                 println!("accepted new connection");
                 let req = read_request(&mut stream);
-                println!("{req}");
+                let resp = req.execute_method();
 
                 // Respond
-                let msg = HttpResponse::new(HttpVersion::Http11, HttpResponseCode::Ok).to_string();
-
+                let msg = resp.to_string();
                 if let Err(e) = stream.write_all(msg.as_bytes()) {
                     eprintln!("Failed to write to stream: {}", e);
                 };
-
                 if let Err(e) = stream.flush() {
                     eprintln!("Failed to flush stream: {}", e);
                 };

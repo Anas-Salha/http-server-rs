@@ -1,4 +1,7 @@
-use crate::http::*;
+use crate::http::{
+    response::{HttpResponse, HttpResponseCode},
+    *,
+};
 
 pub enum HttpRequestMethod {
     Get,
@@ -28,17 +31,44 @@ impl fmt::Display for HttpRequestMethod {
 
 pub struct HttpRequest {
     method: HttpRequestMethod,
-    request_target: String,
+    target: String,
     version: HttpVersion,
 }
 
 impl HttpRequest {
-    pub fn new(method: HttpRequestMethod, request_target: String, version: HttpVersion) -> Self {
+    pub fn new(method: HttpRequestMethod, target: String, version: HttpVersion) -> Self {
         Self {
             method,
-            request_target,
+            target,
             version,
         }
+    }
+
+    pub fn execute_method(&self) -> HttpResponse {
+        match self.method {
+            HttpRequestMethod::Get => return self.get(),
+        }
+    }
+
+    fn get(&self) -> HttpResponse {
+        let root = std::fs::canonicalize(".").unwrap(); // Set project root as the root directory to search within
+        let candidate = self.target.trim_start_matches('/');
+        let candidate = root.join(candidate);
+        let real = match std::fs::canonicalize(candidate) {
+            Ok(n) => n,
+            Err(e) => {
+                eprintln!("{}", e);
+                return HttpResponse::new(HttpVersion::Http11, HttpResponseCode::NotFound);
+            }
+        };
+
+        // Any path outside the specified root will be treated as non-existent to avoid path traversal attacks
+        // see: https://owasp.org/www-community/attacks/Path_Traversal
+        if !real.starts_with(root) {
+            return HttpResponse::new(HttpVersion::Http11, HttpResponseCode::NotFound);
+        }
+
+        return HttpResponse::new(HttpVersion::Http11, HttpResponseCode::Ok);
     }
 }
 
@@ -47,7 +77,7 @@ impl fmt::Display for HttpRequest {
         write!(
             f,
             "{} {} {}\r\n\r\n",
-            self.method, self.request_target, self.version
+            self.method, self.target, self.version
         )
     }
 }
