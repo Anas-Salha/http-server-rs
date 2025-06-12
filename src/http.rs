@@ -2,6 +2,7 @@ use std::{fmt, str::FromStr};
 pub mod request;
 pub mod response;
 
+#[derive(Clone)]
 pub enum HttpVersion {
     Http11,
 }

@@ -44,7 +44,7 @@ impl HttpRequest {
         }
     }
 
-    pub fn execute_method(&self) -> HttpResponse {
+    pub fn respond(&self) -> HttpResponse {
         match self.method {
             HttpRequestMethod::Get => return self.get(),
         }
@@ -58,17 +58,17 @@ impl HttpRequest {
             Ok(n) => n,
             Err(e) => {
                 eprintln!("{}", e);
-                return HttpResponse::new(HttpVersion::Http11, HttpResponseCode::NotFound);
+                return HttpResponse::new(self.version.clone(), HttpResponseCode::NotFound);
             }
         };
 
         // Any path outside the specified root will be treated as non-existent to avoid path traversal attacks
         // see: https://owasp.org/www-community/attacks/Path_Traversal
         if !real.starts_with(root) {
-            return HttpResponse::new(HttpVersion::Http11, HttpResponseCode::NotFound);
+            return HttpResponse::new(self.version.clone(), HttpResponseCode::NotFound);
         }
 
-        return HttpResponse::new(HttpVersion::Http11, HttpResponseCode::Ok);
+        return HttpResponse::new(self.version.clone(), HttpResponseCode::Ok);
     }
 }
 

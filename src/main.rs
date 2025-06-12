@@ -14,7 +14,7 @@ fn main() {
                 println!("accepted new connection");
                 match read_request(&mut stream) {
                     Ok(req) => {
-                        let resp = req.execute_method();
+                        let resp = req.respond();
 
                         // Respond
                         let msg = resp.to_string();
