@@ -28,3 +28,17 @@ impl FromStr for HttpVersion {
         }
     }
 }
+
+pub enum HttpHeader {
+    ContentType(mime::Mime),
+    ContentLength(u64),
+}
+
+impl fmt::Display for HttpHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            HttpHeader::ContentType(mime) => write!(f, "Content-Type: {}\r\n", mime),
+            HttpHeader::ContentLength(len) => write!(f, "Content-Length: {}\r\n", len),
+        }
+    }
+}

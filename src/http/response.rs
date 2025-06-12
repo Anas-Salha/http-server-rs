@@ -20,19 +20,41 @@ impl fmt::Display for HttpResponseCode {
 pub struct HttpResponse {
     version: HttpVersion,
     response_code: HttpResponseCode,
+    headers: Vec<HttpHeader>,
+    body: String,
 }
 
 impl HttpResponse {
-    pub fn new(version: HttpVersion, response_code: HttpResponseCode) -> Self {
+    pub fn new(
+        version: HttpVersion,
+        response_code: HttpResponseCode,
+        headers: Vec<HttpHeader>,
+        body: String,
+    ) -> Self {
         Self {
             version,
             response_code,
+            headers,
+            body,
         }
     }
 }
 
 impl fmt::Display for HttpResponse {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}\r\n\r\n", self.version, self.response_code)
+        write!(f, "{} {}\r\n", self.version, self.response_code)
+            .and_then(|_| {
+                for header in &self.headers {
+                    write!(f, "{}", header)?;
+                }
+                write!(f, "\r\n")
+            })
+            .and_then(|_| {
+                if !self.body.is_empty() {
+                    write!(f, "{}", self.body)
+                } else {
+                    Ok(())
+                }
+            })
     }
 }
