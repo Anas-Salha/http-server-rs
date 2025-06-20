@@ -42,19 +42,17 @@ impl HttpResponse {
 
 impl fmt::Display for HttpResponse {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}\r\n", self.version, self.response_code)
-            .and_then(|_| {
-                for header in &self.headers {
-                    write!(f, "{}", header)?;
-                }
-                write!(f, "\r\n")
-            })
-            .and_then(|_| {
-                if !self.body.is_empty() {
-                    write!(f, "{}", self.body)
-                } else {
-                    Ok(())
-                }
-            })
+        write!(f, "{} {}\r\n", self.version, self.response_code)?;
+
+        self.headers
+            .iter()
+            .try_for_each(|header| write!(f, "{}", header))?;
+        write!(f, "\r\n")?;
+
+        if !self.body.is_empty() {
+            write!(f, "{}", self.body)
+        } else {
+            Ok(())
+        }
     }
 }
