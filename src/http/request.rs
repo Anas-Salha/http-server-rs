@@ -102,12 +102,7 @@ impl HttpRequest {
             HttpHeader::ContentType(mime::TEXT_PLAIN),
             HttpHeader::ContentLength(body.len() as u64),
         ];
-        HttpResponse::new(
-            self.version.clone(),
-            HttpResponseCode::Ok,
-            headers,
-            body.to_string(),
-        )
+        HttpResponse::new(self.version.clone(), HttpResponseCode::Ok, headers, body)
     }
 
     fn get_static(&self) -> HttpResponse {
