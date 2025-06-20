@@ -1,5 +1,4 @@
 use http::request::*;
-use mime::Mime;
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
