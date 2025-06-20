@@ -29,9 +29,13 @@ impl FromStr for HttpVersion {
     }
 }
 
+#[derive(Clone)]
 pub enum HttpHeader {
     ContentType(mime::Mime),
     ContentLength(u64),
+    Host(String),
+    UserAgent(String),
+    Accept(String),
 }
 
 impl fmt::Display for HttpHeader {
@@ -39,6 +43,9 @@ impl fmt::Display for HttpHeader {
         match self {
             HttpHeader::ContentType(mime) => write!(f, "Content-Type: {}\r\n", mime),
             HttpHeader::ContentLength(len) => write!(f, "Content-Length: {}\r\n", len),
+            HttpHeader::Host(s) => write!(f, "Host: {}\r\n", s),
+            HttpHeader::UserAgent(s) => write!(f, "User-Agent: {}\r\n", s),
+            HttpHeader::Accept(s) => write!(f, "Accept: {}\r\n", s),
         }
     }
 }

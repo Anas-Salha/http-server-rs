@@ -33,14 +33,21 @@ pub struct HttpRequest {
     method: HttpRequestMethod,
     target: String,
     version: HttpVersion,
+    headers: Vec<HttpHeader>,
 }
 
 impl HttpRequest {
-    pub fn new(method: HttpRequestMethod, target: String, version: HttpVersion) -> Self {
+    pub fn new(
+        method: HttpRequestMethod,
+        target: String,
+        version: HttpVersion,
+        headers: Vec<HttpHeader>,
+    ) -> Self {
         Self {
             method,
             target,
             version,
+            headers,
         }
     }
 
@@ -51,14 +58,46 @@ impl HttpRequest {
     }
 
     fn get(&self) -> HttpResponse {
-        self.target
-            .starts_with("/echo/")
-            .then(|| self.echo())
-            .unwrap_or_else(|| self.get_static())
+        let endpoint = self
+            .target
+            .strip_prefix('/')
+            .unwrap()
+            .split('/')
+            .next()
+            .unwrap();
+
+        match endpoint {
+            "echo" => self.echo(),
+            "user-agent" => self.user_agent(),
+            _ => self.get_static(),
+        }
     }
 
     fn echo(&self) -> HttpResponse {
         let body = self.target.trim_start_matches("/echo/");
+        let headers = vec![
+            HttpHeader::ContentType(mime::TEXT_PLAIN),
+            HttpHeader::ContentLength(body.len() as u64),
+        ];
+        HttpResponse::new(
+            self.version.clone(),
+            HttpResponseCode::Ok,
+            headers,
+            body.to_string(),
+        )
+    }
+
+    fn user_agent(&self) -> HttpResponse {
+        let body: String = self
+            .headers
+            .clone()
+            .into_iter()
+            .filter_map(|h| match h {
+                HttpHeader::UserAgent(s) => Some(s),
+                _ => None,
+            })
+            .collect();
+
         let headers = vec![
             HttpHeader::ContentType(mime::TEXT_PLAIN),
             HttpHeader::ContentLength(body.len() as u64),
@@ -112,10 +151,11 @@ impl HttpRequest {
 
 impl fmt::Display for HttpRequest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} {} {}\r\n\r\n",
-            self.method, self.target, self.version
-        )
+        write!(f, "{} {} {}\r\n", self.method, self.target, self.version).and_then(|_| {
+            for header in &self.headers {
+                write!(f, "{}\r\n", header)?;
+            }
+            write!(f, "\r\n")
+        })
     }
 }

@@ -1,8 +1,11 @@
 use http::request::*;
+use mime::Mime;
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
 };
+
+use crate::http::HttpHeader;
 
 mod http;
 
@@ -50,19 +53,54 @@ fn read_request(stream: &mut TcpStream) -> Result<HttpRequest, Box<dyn std::erro
     stream.read(&mut buf)?;
 
     // 1. Read request line
-    let line_end = buf
+    let req_line_end = buf
         .windows(2)
         .position(|w| w == b"\r\n")
         .ok_or("Failed to find request line end")?;
-    let line = std::str::from_utf8(&buf[..line_end])?;
+    let req_line = std::str::from_utf8(&buf[..req_line_end])?;
 
-    let mut fields = line.split_whitespace();
+    let mut fields = req_line.split_whitespace();
     let method = fields.next().ok_or("Failed to parse method")?.parse()?;
     let target = fields.next().ok_or("Failed to parse target")?.to_owned();
     let version = fields.next().ok_or("Failed to parse version")?.parse()?;
 
-    Ok(HttpRequest::new(method, target, version))
-
     // 2. Read headers
+    let headers_end = buf
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .ok_or("Failed to find headers end")?;
+
+    let headers_start = req_line_end + 2; //skip CRLF after req_line
+    let headers: Vec<&str> = std::str::from_utf8(&buf[headers_start..headers_end])?
+        .split("\r\n")
+        .collect();
+
+    let headers: Vec<HttpHeader> = headers
+        .iter()
+        .filter_map(|header| parse_header(header))
+        .collect();
+
+    Ok(HttpRequest::new(method, target, version, headers))
+
     // 3. Read (optional) body
+}
+
+fn parse_header(header: &str) -> Option<HttpHeader> {
+    let parts: Vec<&str> = header.splitn(2, ":").collect();
+    assert_eq!(parts.len(), 2);
+
+    let key = parts[0].to_lowercase();
+    let value = parts[1].trim();
+
+    match key.as_str() {
+        "content-type" => value
+            .parse::<mime::Mime>()
+            .ok()
+            .map(HttpHeader::ContentType),
+        "content-length" => value.parse::<u64>().ok().map(HttpHeader::ContentLength),
+        "host" => Some(HttpHeader::Host(value.to_string())),
+        "user-agent" => Some(HttpHeader::UserAgent(value.to_string())),
+        "accept" => Some(HttpHeader::Accept(value.to_string())),
+        _ => None,
+    }
 }
