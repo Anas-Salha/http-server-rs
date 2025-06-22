@@ -69,6 +69,10 @@ fn read_request(stream: &mut TcpStream) -> Result<HttpRequest, Box<dyn std::erro
         .position(|w| w == b"\r\n\r\n")
         .ok_or("Failed to find headers end")?;
 
+    if headers_end == req_line_end {
+        return Ok(HttpRequest::new(method, target, version, vec![]));
+    }
+
     let headers_start = req_line_end + 2; //skip CRLF after req_line
     let headers: Vec<&str> = std::str::from_utf8(&buf[headers_start..headers_end])?
         .split("\r\n")
