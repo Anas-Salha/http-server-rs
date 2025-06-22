@@ -13,28 +13,34 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                println!("accepted new connection");
-                match read_request(&mut stream) {
-                    Ok(req) => {
-                        let resp = req.respond();
-
-                        // Respond
-                        let msg = resp.to_string();
-                        if let Err(e) = stream.write_all(msg.as_bytes()) {
-                            eprintln!("Failed to write to stream: {}", e);
-                        };
-                        if let Err(e) = stream.flush() {
-                            eprintln!("Failed to flush stream: {}", e);
-                        };
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to read request: {}", e);
-                    }
-                }
+                std::thread::spawn(move || {
+                    handle_connection(&mut stream);
+                });
             }
             Err(e) => {
                 println!("error: {}", e);
             }
+        }
+    }
+}
+
+fn handle_connection(stream: &mut TcpStream) {
+    println!("accepted new connection");
+    match read_request(stream) {
+        Ok(req) => {
+            let resp = req.respond();
+
+            // Respond
+            let msg = resp.to_string();
+            if let Err(e) = stream.write_all(msg.as_bytes()) {
+                eprintln!("Failed to write to stream: {}", e);
+            };
+            if let Err(e) = stream.flush() {
+                eprintln!("Failed to flush stream: {}", e);
+            };
+        }
+        Err(e) => {
+            eprintln!("Failed to read request: {}", e);
         }
     }
 }
