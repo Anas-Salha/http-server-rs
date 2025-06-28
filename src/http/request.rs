@@ -114,7 +114,7 @@ impl HttpRequest {
     }
 
     fn get_static(&self) -> HttpResponse {
-        let root = std::fs::canonicalize(".").unwrap(); // Set project root as the root directory to search within
+        let root = std::fs::canonicalize("./pub").unwrap(); // Set pub/ directory as the root directory to search within
         let candidate = self.target.trim_start_matches('/');
         let candidate = candidate.trim_start_matches("files/");
         let candidate = root.join(candidate);
