@@ -21,7 +21,7 @@ pub struct HttpResponse {
     version: HttpVersion,
     response_code: HttpResponseCode,
     headers: Vec<HttpHeader>,
-    body: String,
+    body: Vec<u8>,
 }
 
 impl HttpResponse {
@@ -29,7 +29,7 @@ impl HttpResponse {
         version: HttpVersion,
         response_code: HttpResponseCode,
         headers: Vec<HttpHeader>,
-        body: String,
+        body: Vec<u8>,
     ) -> Self {
         Self {
             version,
@@ -37,6 +37,10 @@ impl HttpResponse {
             headers,
             body,
         }
+    }
+
+    pub fn get_body(&self) -> Vec<u8> {
+        self.body.clone()
     }
 }
 
@@ -49,10 +53,6 @@ impl fmt::Display for HttpResponse {
             .try_for_each(|header| write!(f, "{}", header))?;
         write!(f, "\r\n")?;
 
-        if !self.body.is_empty() {
-            write!(f, "{}", self.body)
-        } else {
-            Ok(())
-        }
+        Ok(())
     }
 }

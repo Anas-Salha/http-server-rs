@@ -32,7 +32,9 @@ fn handle_connection(stream: &mut TcpStream) {
 
             // Respond
             let msg = resp.to_string();
-            if let Err(e) = stream.write_all(msg.as_bytes()) {
+            let mut bytes = msg.into_bytes();
+            bytes.extend_from_slice(&resp.get_body());
+            if let Err(e) = stream.write_all(&bytes) {
                 eprintln!("Failed to write to stream: {}", e);
             };
             if let Err(e) = stream.flush() {

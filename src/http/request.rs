@@ -3,6 +3,8 @@ use crate::http::{
     *,
 };
 
+use std::fs;
+
 pub enum HttpRequestMethod {
     Get,
 }
@@ -69,6 +71,7 @@ impl HttpRequest {
         match endpoint {
             "echo" => self.echo(),
             "user-agent" => self.user_agent(),
+            "files" => self.get_static(),
             _ => self.get_static(),
         }
     }
@@ -83,7 +86,7 @@ impl HttpRequest {
             self.version.clone(),
             HttpResponseCode::Ok,
             headers,
-            body.to_string(),
+            body.into(),
         )
     }
 
@@ -102,12 +105,18 @@ impl HttpRequest {
             HttpHeader::ContentType(mime::TEXT_PLAIN),
             HttpHeader::ContentLength(body.len() as u64),
         ];
-        HttpResponse::new(self.version.clone(), HttpResponseCode::Ok, headers, body)
+        HttpResponse::new(
+            self.version.clone(),
+            HttpResponseCode::Ok,
+            headers,
+            body.into(),
+        )
     }
 
     fn get_static(&self) -> HttpResponse {
         let root = std::fs::canonicalize(".").unwrap(); // Set project root as the root directory to search within
         let candidate = self.target.trim_start_matches('/');
+        let candidate = candidate.trim_start_matches("files/");
         let candidate = root.join(candidate);
 
         // If the candidate path cannot be resolved, we treat it as non-existent and return a 404 Not Found response
@@ -119,7 +128,7 @@ impl HttpRequest {
                     self.version.clone(),
                     HttpResponseCode::NotFound,
                     vec![],
-                    String::new(),
+                    vec![],
                 );
             }
         };
@@ -131,15 +140,24 @@ impl HttpRequest {
                 self.version.clone(),
                 HttpResponseCode::NotFound,
                 vec![],
-                String::new(),
+                vec![],
             );
+        }
+
+        let mut file_as_bytes: Vec<u8> = vec![];
+        let mut headers: Vec<HttpHeader> = vec![];
+
+        if real.is_file() {
+            file_as_bytes = fs::read(real).unwrap();
+            headers.push(HttpHeader::ContentType(mime::APPLICATION_OCTET_STREAM));
+            headers.push(HttpHeader::ContentLength(file_as_bytes.len() as u64));
         }
 
         return HttpResponse::new(
             self.version.clone(),
             HttpResponseCode::Ok,
-            vec![],
-            String::new(),
+            headers,
+            file_as_bytes,
         );
     }
 }
