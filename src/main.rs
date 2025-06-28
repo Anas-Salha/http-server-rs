@@ -7,8 +7,21 @@ use std::{
 use crate::http::HttpHeader;
 
 mod http;
+use clap::Parser;
+use std::sync::OnceLock;
+
+pub static DIR: OnceLock<String> = OnceLock::new();
+
+#[derive(Parser, Debug)]
+struct Args {
+    /// Path of the directory to get files from
+    #[arg(long, value_name = "PATH", default_value_t = String::from("/test"))]
+    directory: String,
+}
 
 fn main() {
+    let args = Args::parse();
+    DIR.set(args.directory).unwrap();
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
     for stream in listener.incoming() {
         match stream {

@@ -3,6 +3,7 @@ use crate::http::{
     *,
 };
 
+use crate::DIR;
 use std::fs;
 
 pub enum HttpRequestMethod {
@@ -115,6 +116,9 @@ impl HttpRequest {
 
     fn get_static(&self) -> HttpResponse {
         let root = std::fs::canonicalize("./pub").unwrap(); // Set pub/ directory as the root directory to search within
+        let dir = DIR.get().unwrap().trim_start_matches('/');
+        let root = root.join(dir);
+
         let candidate = self.target.trim_start_matches('/');
         let candidate = candidate.trim_start_matches("files/");
         let candidate = root.join(candidate);
